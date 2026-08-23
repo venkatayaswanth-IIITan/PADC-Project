@@ -1,0 +1,12 @@
+# Binaries
+*.exe
+*.o
+*.obj
+*.out
+
+# Temporary / OS
+.DS_Store
+Thumbs.db
+*.log
+input.txt
+out.txt

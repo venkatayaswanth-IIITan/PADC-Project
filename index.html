@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="PADC Project — Interactive dashboard for Parallel & Distributed Computing. Visualize OpenMP parallel matrix multiplication with thread analytics and performance charts." />
+  <meta name="keywords" content="OpenMP, parallel computing, matrix multiplication, PADC, performance visualization" />
+  <meta name="author" content="PADC Project" />
+  <meta property="og:title" content="PADC — Parallel Matrix Multiplication Dashboard" />
+  <meta property="og:description" content="Visualize OpenMP-powered parallel matrix multiplication with real-time thread analytics." />
+  <title>PADC — Parallel Matrix Multiplication Dashboard</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <!-- Background Effects -->
+  <div class="bg-grid" aria-hidden="true"></div>
+  <div class="bg-orb bg-orb-1" aria-hidden="true"></div>
+  <div class="bg-orb bg-orb-2" aria-hidden="true"></div>
+  <div class="bg-orb bg-orb-3" aria-hidden="true"></div>
+
+  <!-- App Root -->
+  <div id="app">
+
+    <!-- ── Navigation ── -->
+    <nav class="navbar" role="navigation" aria-label="Main navigation">
+      <div class="nav-logo">
+        <div class="nav-logo-icon" aria-hidden="true">⚡</div>
+        <div>
+          <div class="nav-logo-text">PADC</div>
+          <div class="nav-logo-sub">Parallel &amp; Distributed Computing</div>
+        </div>
+      </div>
+      <div class="nav-badge" aria-label="OpenMP status">
+        <div class="nav-badge-dot" aria-hidden="true"></div>
+        OpenMP Active
+      </div>
+    </nav>
+
+    <!-- ── Hero ── -->
+    <header class="hero animate-in">
+      <div class="hero-eyebrow" aria-label="Category">
+        <span>🔢</span> Matrix Multiplication
+      </div>
+      <h1>
+        Parallel Computing<br />
+        <span class="gradient-text">Visualizer Dashboard</span>
+      </h1>
+      <p class="hero-desc">
+        Interactive frontend for the OpenMP parallel matrix multiplication engine.
+        Configure threads and matrix size, then watch the computation unfold in real time.
+      </p>
+      <div class="hero-tags">
+        <span class="tag">C++ OpenMP</span>
+        <span class="tag">#pragma omp parallel for</span>
+        <span class="tag">O(N³) Complexity</span>
+        <span class="tag">Shared Memory</span>
+        <span class="tag">Thread Scheduling</span>
+      </div>
+    </header>
+
+    <!-- ── Dashboard ── -->
+    <main class="dashboard" id="dashboard" role="main">
+
+      <!-- Stat Cards Row -->
+      <div class="row-3col animate-in delay-1">
+        <!-- Execution Time -->
+        <div class="stat-card" id="card-time" role="region" aria-label="Execution Time">
+          <div class="stat-card-top">
+            <span class="stat-label">Exec Time</span>
+            <div class="stat-icon bg-blue">⏱️</div>
+          </div>
+          <div class="stat-value text-blue">
+            <span id="stat-time">—</span>
+            <span class="stat-unit">ms</span>
+          </div>
+          <div class="stat-bar"><div class="stat-bar-fill fill-blue" id="bar-time"></div></div>
+        </div>
+
+        <!-- Speedup -->
+        <div class="stat-card" id="card-speedup" role="region" aria-label="Speedup ratio">
+          <div class="stat-card-top">
+            <span class="stat-label">Speedup</span>
+            <div class="stat-icon bg-green">🚀</div>
+          </div>
+          <div class="stat-value text-green">
+            <span id="stat-speedup">—</span>
+            <span class="stat-unit">×</span>
+          </div>
+          <div class="stat-bar"><div class="stat-bar-fill fill-green" id="bar-speedup"></div></div>
+        </div>
+
+        <!-- Efficiency -->
+        <div class="stat-card" id="card-efficiency" role="region" aria-label="Parallel efficiency">
+          <div class="stat-card-top">
+            <span class="stat-label">Efficiency</span>
+            <div class="stat-icon bg-purple">📊</div>
+          </div>
+          <div class="stat-value text-purple">
+            <span id="stat-efficiency">—</span>
+            <span class="stat-unit">%</span>
+          </div>
+          <div class="stat-bar"><div class="stat-bar-fill fill-purple" id="bar-efficiency"></div></div>
+        </div>
+      </div>
+
+      <!-- Control + Matrix Row -->
+      <div class="row-2col animate-in delay-2">
+
+        <!-- Control Panel -->
+        <section class="card" role="region" aria-label="Configuration controls">
+          <div class="card-header">
+            <div class="card-title">
+              <div class="card-title-icon icon-blue">⚙️</div>
+              Configuration
+            </div>
+          </div>
+
+          <!-- Matrix Dimensions Controls -->
+          <div class="dim-controls-wrapper">
+            <div class="dim-box dim-box-a">
+              <div class="dim-box-title">
+                <span class="dot-a"></span> Matrix A Dimensions
+                <span class="dim-tag" id="tag-dim-a">2 × 3</span>
+              </div>
+              <div class="dim-inputs-row">
+                <div class="dim-field">
+                  <label for="dim-a-rows">Rows (M)</label>
+                  <input type="number" id="dim-a-rows" min="1" max="500" value="2" class="manual-num-input dim-input" placeholder="1-500" />
+                </div>
+                <span class="dim-x">×</span>
+                <div class="dim-field">
+                  <label for="dim-a-cols">Cols (K)</label>
+                  <input type="number" id="dim-a-cols" min="1" max="500" value="3" class="manual-num-input dim-input" placeholder="1-500" />
+                </div>
+              </div>
+            </div>
+
+            <div class="dim-box dim-box-b">
+              <div class="dim-box-title">
+                <span class="dot-b"></span> Matrix B Dimensions
+                <span class="dim-tag" id="tag-dim-b">3 × 4</span>
+              </div>
+              <div class="dim-inputs-row">
+                <div class="dim-field">
+                  <label for="dim-b-rows">Rows (K)</label>
+                  <input type="number" id="dim-b-rows" min="1" max="500" value="3" class="manual-num-input dim-input" placeholder="1-500" />
+                </div>
+                <span class="dim-x">×</span>
+                <div class="dim-field">
+                  <label for="dim-b-cols">Cols (N)</label>
+                  <input type="number" id="dim-b-cols" min="1" max="500" value="4" class="manual-num-input dim-input" placeholder="1-500" />
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Dimension Link & Mismatch Alert -->
+          <div class="dim-helper-row">
+            <label class="dim-link-toggle" title="Keep Matrix A columns equal to Matrix B rows for valid multiplication">
+              <input type="checkbox" id="link-dims" checked />
+              <span>🔗 Auto-match inner dimensions (Cols A = Rows B)</span>
+            </label>
+          </div>
+          <div id="dim-mismatch-alert" class="dim-alert" style="display: none;">
+            <div class="dim-alert-icon">⚠️</div>
+            <div class="dim-alert-msg">
+              <strong>Dimension Mismatch:</strong> Matrix A has <span id="alert-a-cols">3</span> columns, but Matrix B has <span id="alert-b-rows">4</span> rows. Matrix multiplication requires <code>Cols(A) == Rows(B)</code>.
+              <button id="btn-fix-dims" class="btn-fix-dims" type="button">Fix Dimensions</button>
+            </div>
+          </div>
+
+          <!-- Thread Count Slider -->
+          <div class="control-group" style="margin-top: 18px;">
+            <div class="control-label">
+              <span>OpenMP Thread Count</span>
+              <span class="control-value" id="val-threads">4</span>
+            </div>
+            <input type="range" id="slider-threads" min="1" max="16" value="4" step="1"
+                   aria-label="Thread count" aria-valuemin="1" aria-valuemax="16" aria-valuenow="4" />
+            <div class="range-ticks">
+              <span>1</span><span>4</span><span>8</span><span>12</span><span>16</span>
+            </div>
+          </div>
+
+          <div class="section-divider">algorithm</div>
+
+          <!-- Algorithm Info -->
+          <div class="algo-info" role="region" aria-label="Algorithm details">
+            <div class="algo-block">
+              <div class="algo-block-title">Pragma</div>
+              <div class="algo-block-code">
+                <span class="dir">#pragma omp</span><br />
+                &nbsp;&nbsp;<span class="kw">parallel for</span>
+              </div>
+            </div>
+            <div class="algo-block">
+              <div class="algo-block-title">Complexity</div>
+              <div class="algo-block-code">
+                T(N,p) = <span class="num">O(N³/p)</span><br />
+                <span class="cm">// p = threads</span>
+              </div>
+            </div>
+            <div class="algo-block">
+              <div class="algo-block-title">Schedule</div>
+              <div class="algo-block-code">
+                <span class="kw">static</span> / <span class="kw">dynamic</span><br />
+                <span class="num" id="rows-per-thread">16</span> rows/thread
+              </div>
+            </div>
+            <div class="algo-block">
+              <div class="algo-block-title">Operations</div>
+              <div class="algo-block-code">
+                <span class="num" id="total-ops">524288</span><br />
+                <span class="cm">// FLOPs</span>
+              </div>
+            </div>
+          </div>
+
+          <div style="height: 20px;"></div>
+
+          <!-- Run Button -->
+          <button class="btn btn-primary" id="btn-run" aria-label="Run parallel matrix multiplication">
+            <span class="btn-icon" id="run-icon">▶</span>
+            <span id="run-label">Run Parallel Multiplication</span>
+          </button>
+          <button class="btn btn-secondary" id="btn-reset" aria-label="Reset to default values">
+            ↺ Reset
+          </button>
+        </section>
+
+        <!-- Matrix Visualizer -->
+        <section class="card" role="region" aria-label="Matrix multiplication visualizer">
+          <div class="card-header">
+            <div class="card-title">
+              <div class="card-title-icon icon-purple">🔢</div>
+              Matrix Visualizer
+            </div>
+            <span id="matrix-status" style="font-size:11px; color: var(--text-muted); font-family: 'JetBrains Mono', monospace;">Idle</span>
+          </div>
+
+          <div class="matrix-wrapper" id="matrix-wrapper" role="img" aria-label="Matrix multiplication A × B = C">
+            <!-- Filled by JS -->
+          </div>
+
+          <div id="matrix-overflow" class="matrix-overflow-note" style="display:none;"></div>
+        </section>
+      </div>
+
+      <!-- Matrix Input Section (A and B editable grids) -->
+      <div class="animate-in delay-3" id="matrix-input-section">
+        <!-- Editable grids built by JS -->
+      </div>
+
+      <!-- Thread Dashboard + Performance Chart Row -->
+      <div class="row-2col animate-in delay-3">
+
+        <!-- Thread Utilization -->
+        <section class="card" role="region" aria-label="Thread utilization dashboard">
+          <div class="card-header">
+            <div class="card-title">
+              <div class="card-title-icon icon-green">🧵</div>
+              Thread Utilization
+            </div>
+            <span id="threads-active" style="font-size: 11px; font-family: 'JetBrains Mono', monospace; color: var(--text-muted);">0 / 0 active</span>
+          </div>
+          <div class="thread-list" id="thread-list" aria-live="polite">
+            <!-- Filled by JS -->
+          </div>
+        </section>
+
+        <!-- Performance Chart -->
+        <section class="card" role="region" aria-label="Performance chart">
+          <div class="card-header">
+            <div class="card-title">
+              <div class="card-title-icon icon-blue">📈</div>
+              Performance Analysis
+            </div>
+          </div>
+          <div class="chart-legend">
+            <div class="legend-item">
+              <div class="legend-dot" style="background: #00d4ff;"></div>
+              <span>Parallel Time</span>
+            </div>
+            <div class="legend-item">
+              <div class="legend-dot" style="background: #7c3aed;"></div>
+              <span>Sequential Time</span>
+            </div>
+            <div class="legend-item">
+              <div class="legend-dot" style="background: #00ff88;"></div>
+              <span>Speedup</span>
+            </div>
+          </div>
+          <div class="chart-container">
+            <canvas id="perf-chart" height="220" aria-label="Performance chart showing time vs thread count"></canvas>
+          </div>
+        </section>
+      </div>
+
+      <!-- Speedup Table Row -->
+      <div class="row-2col animate-in delay-4">
+
+        <!-- Speedup Reference Table -->
+        <section class="card" role="region" aria-label="Speedup reference table">
+          <div class="card-header">
+            <div class="card-title">
+              <div class="card-title-icon icon-green">⚡</div>
+              Speedup Reference (N = <span id="speedup-n-label">64</span>)
+            </div>
+          </div>
+          <div class="speedup-display" id="speedup-table" aria-label="Speedup values per thread count">
+            <!-- Filled by JS -->
+          </div>
+        </section>
+
+        <!-- Execution Log Terminal -->
+        <section class="card" role="region" aria-label="Execution log">
+          <div class="card-header">
+            <div class="card-title">
+              <div class="card-title-icon icon-blue">💻</div>
+              Execution Log
+            </div>
+            <button id="btn-clear-log" style="background:none; border: 1px solid var(--border); border-radius:6px; padding: 4px 10px; font-size: 11px; color: var(--text-muted); cursor: pointer; font-family: 'JetBrains Mono', monospace;" aria-label="Clear log">Clear</button>
+          </div>
+          <div class="terminal" id="exec-log" role="log" aria-live="polite" aria-label="Execution log output">
+            <div class="terminal-line">
+              <span class="terminal-time">00:00.000</span>
+              <span class="terminal-tag-info">[INFO]</span>
+              <span class="terminal-msg">PADC Dashboard initialized. Ready.</span>
+            </div>
+            <div class="terminal-line">
+              <span class="terminal-time">00:00.001</span>
+              <span class="terminal-tag-ok">[OK]</span>
+              <span class="terminal-msg">OpenMP runtime: <span class="hl">available</span></span>
+            </div>
+            <div class="terminal-line">
+              <span class="terminal-time">00:00.002</span>
+              <span class="terminal-tag-info">[INFO]</span>
+              <span class="terminal-msg">Set matrix size N and thread count, then press <span class="hl">Run</span>.</span>
+            </div>
+          </div>
+        </section>
+      </div>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer" role="contentinfo">
+      PADC Project &nbsp;·&nbsp; OpenMP Parallel Matrix Multiplication &nbsp;·&nbsp; C++ + HTML/CSS/JS
+    </footer>
+  </div>
+
+  <!-- Toast notification -->
+  <div class="toast" id="toast" role="status" aria-live="polite">
+    <span class="toast-icon" id="toast-icon"></span>
+    <span id="toast-msg"></span>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
