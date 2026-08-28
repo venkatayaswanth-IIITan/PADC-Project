@@ -717,7 +717,7 @@ function formatSI(n) {
   return n.toFixed(0);
 }
 
-// ── Run Parallel Multiplication ───────────────────────────────
+// ── Run Matrix Multiplication (Serial OR Parallel) ───────────
 btnRun.addEventListener('click', async () => {
   if (state.running) return;
 
@@ -726,6 +726,7 @@ btnRun.addEventListener('click', async () => {
   const B_rows = state.bRows;
   const N = state.bCols;
   const p = state.threads;
+  const isSerial = state.mode === 'serial';
 
   if (K !== B_rows) {
     showToast('⚠️', `Cannot multiply: Cols of A (${K}) ≠ Rows of B (${B_rows})`);
@@ -738,56 +739,99 @@ btnRun.addEventListener('click', async () => {
   btnRun.disabled = true;
   btnRun.innerHTML = `<div class="spinner"></div><span>Computing…</span>`;
 
-  // Collect manual values from input grids
+  // Collect matrix values
   const matA = getMatrixValues('a', M, K);
   const matB = getMatrixValues('b', B_rows, N);
   const matC = multiplyMatrices(matA, matB, M, K, N);
 
-  log('run', `Executing A(${M}×${K}) × B(${K}×${N}) → C(${M}×${N}) with`, `${p} thread${p > 1 ? 's' : ''}`);
-  log('info', `FLOPs: ${formatSI(calcFlops(M, K, N))}, Parallel rows: ${M}, Rows/thread: ${Math.ceil(M / p)}`);
+  if (isSerial) {
+    // ─── SERIAL mode — mirrors your serial C++ code ───────────
+    log('run', `[SERIAL] Executing A(${M}×${K}) × B(${K}×${N}) → C(${M}×${N})`);
+    log('info', `Single-threaded execution (no OpenMP parallelization)`);
+    log('info', `Matrix Size: ${N} × ${N}`);
 
-  // Log matrix contents for transparency
-  if (M <= 5 && K <= 5) {
-    matA.forEach((row, idx) => log('info', `Matrix A[${idx}] = [${row.join(', ')}]`));
+    if (M <= 5 && K <= 5) matA.forEach((row, i) => log('info', `Matrix A[${i}] = [${row.join(', ')}]`));
+    if (B_rows <= 5 && N <= 5) matB.forEach((row, i) => log('info', `Matrix B[${i}] = [${row.join(', ')}]`));
+
+    buildMatrixVisualizer(matA, matB);
+
+    const ts = seqTimeRect(M, K, N);
+    const timeMs = ts * 1000;
+
+    const animDuration = Math.min(2200, Math.max(500, 450 + (M * N) * 40));
+    await Promise.all([ animateMatrix(matC, M, N), animateThreadBars(animDuration, 1) ]);
+
+    // Serial stats: speedup = 1.00x, efficiency = 100%
+    updateStats(timeMs, 1.0, 100.0);
+    drawChart();
+    state.history.push({ M, K, N, threads: 1, timeMs, speedup: 1, efficiency: 100 });
+
+    log('ok', `Serial Matrix Multiplication Completed`);
+    log('ok', `Matrix Size : ${N} x ${N}`);
+    log('ok', `Time        : ${ts.toFixed(6)} seconds`);
+
+    if (M <= 10 && N <= 10) {
+      log('info', 'Result Matrix C:');
+      matC.forEach((row, i) => log('info', `C[${i}] = [${row.map(v => fmtVal(v)).join(', ')}]`));
+    }
+
+    showToast('🔷', `Serial Multiplication completed in ${timeMs.toFixed(3)} ms`);
+
+    state.running = false;
+    btnRun.disabled = false;
+    btnRun.className = 'btn btn-primary mode-serial';
+    btnRun.innerHTML = `<span class="btn-icon">🔷</span><span id="run-label">Run Serial Multiplication</span>`;
+
+  } else {
+    // ─── PARALLEL mode — mirrors your OpenMP parallel C++ code ────────
+    const totalWork = M * K * N;
+    const workloadPerThread = totalWork / p;
+
+    log('run', `[PARALLEL] Executing A(${M}×${K}) × B(${K}×${N}) → C(${M}×${N}) with ${p} threads`);
+    log('info', `#pragma omp parallel for active`);
+
+    if (M <= 5 && K <= 5) matA.forEach((row, i) => log('info', `Matrix A[${i}] = [${row.join(', ')}]`));
+    if (B_rows <= 5 && N <= 5) matB.forEach((row, i) => log('info', `Matrix B[${i}] = [${row.join(', ')}]`));
+
+    buildMatrixVisualizer(matA, matB);
+
+    const ts = seqTimeRect(M, K, N);
+    const tp = parTimeRect(M, K, N, p);
+    const speedup    = ts / tp;
+    const efficiency = (speedup / p) * 100;
+    const timeMs     = tp * 1000;
+
+    const animDuration = Math.min(2200, Math.max(500, 450 + (M * N) * 40));
+    await Promise.all([ animateMatrix(matC, M, N), animateThreadBars(animDuration) ]);
+
+    updateStats(timeMs, speedup, efficiency);
+    drawChart();
+    state.history.push({ M, K, N, threads: p, timeMs, speedup, efficiency });
+
+    log('ok', `============================================`);
+    log('ok', `       PARALLEL MATRIX MULTIPLICATION`);
+    log('ok', `============================================`);
+    log('ok', `Matrix Size (N)        : ${N} x ${N}`);
+    log('ok', `Number of Threads      : ${p}`);
+    log('ok', `Parallel Execution Time: ${tp.toFixed(6)} seconds`);
+    log('ok', `Total Work             : ${totalWork.toLocaleString('en-US')} operations`);
+    log('ok', `Workload / Thread      : ${workloadPerThread.toFixed(0)} operations`);
+    log('ok', `Speedup                : ${speedup.toFixed(4)}x`);
+    log('ok', `Efficiency             : ${efficiency.toFixed(2)} %`);
+    log('ok', `============================================`);
+
+    if (M <= 10 && N <= 10) {
+      log('info', 'Result Matrix C:');
+      matC.forEach((row, i) => log('info', `C[${i}] = [${row.map(v => fmtVal(v)).join(', ')}]`));
+    }
+
+    showToast('⚡', `Parallel Multiplication completed in ${timeMs.toFixed(3)} ms (Speedup: ${speedup.toFixed(2)}x)`);
+
+    state.running = false;
+    btnRun.disabled = false;
+    btnRun.className = 'btn btn-primary';
+    btnRun.innerHTML = `<span class="btn-icon">⚡</span><span id="run-label">Run Parallel Multiplication</span>`;
   }
-  if (B_rows <= 5 && N <= 5) {
-    matB.forEach((row, idx) => log('info', `Matrix B[${idx}] = [${row.join(', ')}]`));
-  }
-
-  // Update visualizer with actual A and B values
-  buildMatrixVisualizer(matA, matB);
-
-  // Timing
-  const ts = seqTimeRect(M, K, N);
-  const tp = parTimeRect(M, K, N, p);
-  const speedup    = ts / tp;
-  const efficiency = (speedup / p) * 100;
-  const timeMs     = tp * 1000;
-
-  const animDuration = Math.min(2200, Math.max(500, 450 + (M * N) * 40));
-
-  await Promise.all([
-    animateMatrix(matC, M, N),
-    animateThreadBars(animDuration),
-  ]);
-
-  updateStats(timeMs, speedup, efficiency);
-  drawChart();
-
-  state.history.push({ M, K, N, threads: p, timeMs, speedup, efficiency });
-
-  log('ok', `Multiplication completed in ${timeMs.toFixed(4)} ms — Speedup:`, `${speedup.toFixed(2)}×`);
-  log('ok', `Efficiency:`, `${efficiency.toFixed(1)}%`);
-
-  if (M <= 6 && N <= 6) {
-    matC.forEach((row, idx) => log('info', `Result C[${idx}] = [${row.map(v => fmtVal(v)).join(', ')}]`));
-  }
-
-  showToast('✅', `A(${M}×${K}) × B(${K}×${N}) computed! Result C is ${M}×${N}`);
-
-  state.running = false;
-  btnRun.disabled = false;
-  btnRun.innerHTML = `<span class="btn-icon">▶</span><span>Run Parallel Multiplication</span>`;
 });
 
 // ── Reset ─────────────────────────────────────────────────────
@@ -980,3 +1024,76 @@ if (document.readyState === 'loading') {
 } else {
   setTimeout(init, 0);
 }
+
+
+// ── Mode Selector (Serial / Parallel) ────────────────────────
+(function initModeSelector() {
+  // Add mode to state
+  state.mode = 'parallel'; // default
+
+  const pillSerial   = document.getElementById('mode-serial');
+  const pillParallel = document.getElementById('mode-parallel');
+  const badge        = document.getElementById('mode-active-badge');
+  const statusStrip  = document.getElementById('mode-status-strip');
+  const statusText   = document.getElementById('mode-status-text');
+  const statusThreads = document.getElementById('mode-status-threads');
+  const threadGroup  = document.getElementById('thread-control-group');
+  const runLabel     = document.getElementById('run-label');
+
+  if (!pillSerial || !pillParallel) return;
+
+  function applyMode(mode) {
+    state.mode = mode;
+    const isSerial = mode === 'serial';
+
+    // Update pills
+    pillSerial.classList.toggle('mode-pill-active', isSerial);
+    pillSerial.setAttribute('aria-checked', isSerial ? 'true' : 'false');
+    pillParallel.classList.toggle('mode-pill-active', !isSerial);
+    pillParallel.setAttribute('aria-checked', isSerial ? 'false' : 'true');
+
+    // Update badge
+    badge.textContent = isSerial ? '🔷 Serial Mode Active' : '⚡ Parallel Mode Active';
+    badge.className = 'mode-badge ' + (isSerial ? 'badge-serial' : 'badge-parallel');
+
+    // Update run button label & style
+    if (runLabel) runLabel.textContent = isSerial ? 'Run Serial Multiplication' : 'Run Parallel Multiplication';
+    btnRun.className = 'btn btn-primary' + (isSerial ? ' mode-serial' : '');
+
+    // Update status strip in config panel
+    if (statusStrip) {
+      statusStrip.className = 'mode-status-strip ' + (isSerial ? 'strip-serial' : 'strip-parallel');
+    }
+
+    // Update status text
+    if (statusText) {
+      const p = state.threads || 4;
+      statusText.innerHTML = isSerial
+        ? `🔷 Serial Mode — Single-threaded execution (configured threads: <strong id="mode-status-threads">${p}</strong>)`
+        : `⚡ Parallel Mode — Using OpenMP with <strong id="mode-status-threads">${p}</strong> thread(s)`;
+    }
+
+    // Keep thread slider enabled in both Serial & Parallel modes
+    if (threadGroup) threadGroup.classList.remove('dimmed');
+
+    // Log the switch
+    log('info', isSerial
+      ? `Mode switched to SERIAL — single-threaded (threads set to ${state.threads})`
+      : `Mode switched to PARALLEL — #pragma omp parallel for with ${state.threads} thread(s)`);
+  }
+
+  pillSerial.addEventListener('click',   () => applyMode('serial'));
+  pillParallel.addEventListener('click', () => applyMode('parallel'));
+
+  // Keep status thread count in sync with the slider
+  const slider = document.getElementById('slider-threads');
+  if (slider) {
+    slider.addEventListener('input', () => {
+      const el = document.getElementById('mode-status-threads');
+      if (el) el.textContent = slider.value;
+    });
+  }
+
+  // Init to parallel (default)
+  applyMode('parallel');
+})();

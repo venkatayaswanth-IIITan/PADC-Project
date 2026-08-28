@@ -56,7 +56,27 @@
         <span class="tag">Shared Memory</span>
         <span class="tag">Thread Scheduling</span>
       </div>
+
+      <!-- ── Mode Selector ── -->
+      <div class="mode-selector-bar animate-in" id="mode-selector-bar" role="group" aria-label="Execution mode selector">
+        <div class="mode-label">Execution Mode:</div>
+        <div class="mode-pills" role="radiogroup" aria-label="Choose serial or parallel mode">
+          <button class="mode-pill" id="mode-serial" role="radio" aria-checked="false" aria-label="Serial mode — single threaded">
+            <span class="mode-pill-icon">🔷</span>
+            <span class="mode-pill-name">Serial</span>
+            <span class="mode-pill-sub">1 Thread · No OpenMP</span>
+          </button>
+          <div class="mode-vs" aria-hidden="true">vs</div>
+          <button class="mode-pill mode-pill-active" id="mode-parallel" role="radio" aria-checked="true" aria-label="Parallel mode — OpenMP multi-threaded">
+            <span class="mode-pill-icon">⚡</span>
+            <span class="mode-pill-name">Parallel</span>
+            <span class="mode-pill-sub">#pragma omp parallel for</span>
+          </button>
+        </div>
+        <div class="mode-badge" id="mode-active-badge">⚡ Parallel Mode Active</div>
+      </div>
     </header>
+
 
     <!-- ── Dashboard ── -->
     <main class="dashboard" id="dashboard" role="main">
@@ -170,7 +190,7 @@
           </div>
 
           <!-- Thread Count Slider -->
-          <div class="control-group" style="margin-top: 18px;">
+          <div class="control-group" style="margin-top: 18px;" id="thread-control-group">
             <div class="control-label">
               <span>OpenMP Thread Count</span>
               <span class="control-value" id="val-threads">4</span>
@@ -180,6 +200,12 @@
             <div class="range-ticks">
               <span>1</span><span>4</span><span>8</span><span>12</span><span>16</span>
             </div>
+          </div>
+
+          <!-- Mode Status Strip -->
+          <div class="mode-status-strip" id="mode-status-strip">
+            <span class="mode-status-dot" id="mode-status-dot"></span>
+            <span class="mode-status-text" id="mode-status-text">⚡ Parallel Mode — Using OpenMP with <strong id="mode-status-threads">4</strong> thread(s)</span>
           </div>
 
           <div class="section-divider">algorithm</div>

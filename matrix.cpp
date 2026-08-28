@@ -1,28 +1,19 @@
 #include <iostream>
-#include <iomanip>
 #include <omp.h>
-
+#include <iomanip>
 using namespace std;
 
 int main()
 {
     int N;
-    cout << "Enter matrix size N (1 to 500): ";
-    if (!(cin >> N) || N <= 0 || N > 500) {
-        cout << "Invalid matrix size. Please enter a value between 1 and 500.\n";
-        return 1;
-    }
 
-    int num_threads;
-    cout << "Enter number of threads: ";
-    if (!(cin >> num_threads) || num_threads <= 0) {
-        cout << "Invalid thread count.\n";
-        return 1;
-    }
+    cout << "Name    : Chatakonda Venkata Yaswanth" << endl;
+    cout << "Roll No : 2024BCS0245" << endl;
 
-    // ------------------------------------------------
-    // DYNAMIC MEMORY ALLOCATION
-    // ------------------------------------------------
+    cout << "Enter matrix size N: ";
+    cin >> N;
+
+    // Dynamically allocate matrices
     int **A = new int*[N];
     int **B = new int*[N];
     int **C_serial = new int*[N];
@@ -36,9 +27,7 @@ int main()
         C_parallel[i] = new int[N];
     }
 
-    // ------------------------------------------------
-    // INITIALIZE MATRICES
-    // ------------------------------------------------
+    // Initialize matrices
     for (int i = 0; i < N; i++)
     {
         for (int j = 0; j < N; j++)
@@ -51,8 +40,9 @@ int main()
     }
 
     // ------------------------------------------------
-    // 1. SERIAL MATRIX MULTIPLICATION (BASELINE)
+    // SERIAL MATRIX MULTIPLICATION
     // ------------------------------------------------
+
     double serial_start = omp_get_wtime();
 
     for (int i = 0; i < N; i++)
@@ -67,12 +57,25 @@ int main()
     }
 
     double serial_end = omp_get_wtime();
+
     double serial_time = serial_end - serial_start;
 
+
     // ------------------------------------------------
-    // 2. PARALLEL MATRIX MULTIPLICATION (OPENMP)
+    // NUMBER OF THREADS
     // ------------------------------------------------
+
+    int num_threads;
+
+    cout << "Enter number of threads: ";
+    cin >> num_threads;
+
     omp_set_num_threads(num_threads);
+
+
+    // ------------------------------------------------
+    // PARALLEL MATRIX MULTIPLICATION
+    // ------------------------------------------------
 
     double parallel_start = omp_get_wtime();
 
@@ -89,63 +92,86 @@ int main()
     }
 
     double parallel_end = omp_get_wtime();
+
     double parallel_time = parallel_end - parallel_start;
 
+
     // ------------------------------------------------
-    // 3. PERFORMANCE METRICS (SPEEDUP & EFFICIENCY)
+    // CALCULATIONS
     // ------------------------------------------------
+
+    // Total number of multiplication/addition operations
     long long total_work = (long long)N * N * N;
-    double workload_per_thread = (double)total_work / num_threads;
 
-    double speedup = 0.0;
-    double efficiency = 0.0;
+    // Approximate workload handled by each thread
+    double workload_per_thread =
+        (double)total_work / num_threads;
 
-    if (parallel_time > 0.000000001) {
-        speedup = serial_time / parallel_time;
-        efficiency = (speedup / num_threads) * 100.0;
-    } else {
-        speedup = 1.0;
-        efficiency = 100.0;
-    }
+    // Speedup
+    double speedup = serial_time / parallel_time;
+
+    // Efficiency
+    double efficiency =
+        (speedup / num_threads) * 100.0;
+
 
     // ------------------------------------------------
-    // 4. DISPLAY RESULTS
+    // DISPLAY RESULTS
     // ------------------------------------------------
+
     cout << fixed << setprecision(6);
+
     cout << "\n============================================\n";
-    cout << "       PARALLEL MATRIX MULTIPLICATION       \n";
-    cout << "============================================\n";
-    cout << "Matrix Size (N)        : " << N << " x " << N << "\n";
-    cout << "Number of Threads      : " << num_threads << "\n";
-    cout << "--------------------------------------------\n";
-    cout << "Serial Execution Time  : " << serial_time << " seconds\n";
-    cout << "Parallel Execution Time: " << parallel_time << " seconds\n";
-    cout << "Total Operations (N^3) : " << total_work << " ops\n";
-    cout << "Workload per Thread    : " << setprecision(2) << workload_per_thread << " ops\n";
-    cout << "--------------------------------------------\n";
-    cout << "Speedup (Ts / Tp)      : " << setprecision(4) << speedup << " x\n";
-    cout << "Efficiency             : " << setprecision(2) << efficiency << " %\n";
+    cout << "       PARALLEL MATRIX MULTIPLICATION\n";
     cout << "============================================\n";
 
+    cout << "Matrix Size (N)       : " << N << " x " << N << endl;
+    cout << "Number of Threads     : " << num_threads << endl;
+
+    cout << "\nSerial Execution Time : "
+         << serial_time << " seconds" << endl;
+
+    cout << "Parallel Execution Time: "
+         << parallel_time << " seconds" << endl;
+
+    cout << "Total Work            : "
+         << total_work << " operations" << endl;
+
+    cout << "Workload / Thread     : "
+         << workload_per_thread << " operations" << endl;
+
+    cout << "Speedup               : "
+         << speedup << endl;
+
+    cout << "Efficiency            : "
+         << efficiency << " %" << endl;
+
+    cout << "============================================\n";
+
+
     // ------------------------------------------------
-    // 5. DISPLAY RESULT MATRIX (FOR SMALL N)
+    // DISPLAY RESULT MATRIX FOR SMALL N
     // ------------------------------------------------
+
     if (N <= 10)
     {
-        cout << "\nResult Matrix (Parallel C):\n";
+        cout << "\nResult Matrix:\n";
+
         for (int i = 0; i < N; i++)
         {
             for (int j = 0; j < N; j++)
             {
                 cout << C_parallel[i][j] << " ";
             }
-            cout << "\n";
+            cout << endl;
         }
     }
 
+
     // ------------------------------------------------
-    // 6. CLEANUP MEMORY
+    // FREE MEMORY
     // ------------------------------------------------
+
     for (int i = 0; i < N; i++)
     {
         delete[] A[i];

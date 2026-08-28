@@ -1240,3 +1240,202 @@ canvas {
   color: #a78bfa;
 }
 
+
+/* ── Mode Selector Bar (hero area) ──────────────────── */
+.mode-selector-bar {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  flex-wrap: wrap;
+  margin-top: 28px;
+  padding: 16px 24px;
+  background: rgba(12, 21, 37, 0.75);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-xl);
+  backdrop-filter: blur(20px);
+  box-shadow: 0 4px 32px rgba(0, 0, 0, 0.4);
+}
+
+.mode-label {
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--text-muted);
+  font-family: 'JetBrains Mono', monospace;
+  flex-shrink: 0;
+}
+
+.mode-pills {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.mode-pill {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  padding: 12px 28px;
+  background: rgba(255,255,255,0.03);
+  border: 1.5px solid rgba(255,255,255,0.08);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: var(--transition);
+  color: var(--text-secondary);
+  min-width: 140px;
+  position: relative;
+  overflow: hidden;
+}
+
+.mode-pill::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+
+.mode-pill:hover {
+  border-color: rgba(255,255,255,0.2);
+  color: var(--text-primary);
+  transform: translateY(-1px);
+}
+
+/* Serial pill hover/active */
+#mode-serial.mode-pill-active,
+#mode-serial:hover {
+  border-color: rgba(124, 58, 237, 0.5);
+}
+#mode-serial.mode-pill-active {
+  background: rgba(124, 58, 237, 0.12);
+  border-color: var(--purple);
+  color: #a78bfa;
+  box-shadow: 0 0 20px rgba(124, 58, 237, 0.25), inset 0 0 20px rgba(124, 58, 237, 0.05);
+}
+
+/* Parallel pill hover/active */
+#mode-parallel.mode-pill-active,
+#mode-parallel:hover {
+  border-color: rgba(0, 212, 255, 0.5);
+}
+#mode-parallel.mode-pill-active {
+  background: rgba(0, 212, 255, 0.1);
+  border-color: var(--blue-primary);
+  color: var(--blue-primary);
+  box-shadow: 0 0 20px rgba(0, 212, 255, 0.25), inset 0 0 20px rgba(0, 212, 255, 0.05);
+}
+
+.mode-pill-icon {
+  font-size: 22px;
+  line-height: 1;
+}
+
+.mode-pill-name {
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: -0.2px;
+}
+
+.mode-pill-sub {
+  font-size: 10px;
+  font-family: 'JetBrains Mono', monospace;
+  opacity: 0.7;
+}
+
+.mode-vs {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text-muted);
+  letter-spacing: 1px;
+  padding: 0 4px;
+  flex-shrink: 0;
+}
+
+.mode-badge {
+  margin-left: auto;
+  padding: 6px 14px;
+  border-radius: 100px;
+  font-size: 11.5px;
+  font-weight: 700;
+  font-family: 'JetBrains Mono', monospace;
+  letter-spacing: 0.3px;
+  transition: var(--transition);
+}
+
+.mode-badge.badge-parallel {
+  background: rgba(0, 212, 255, 0.12);
+  border: 1px solid rgba(0, 212, 255, 0.3);
+  color: var(--blue-primary);
+}
+
+.mode-badge.badge-serial {
+  background: rgba(124, 58, 237, 0.12);
+  border: 1px solid rgba(124, 58, 237, 0.35);
+  color: #a78bfa;
+}
+
+/* ── Mode Status Strip (inside config card) ─────────── */
+.mode-status-strip {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  margin-top: 12px;
+  padding: 9px 14px;
+  border-radius: var(--radius-sm);
+  font-size: 12px;
+  font-family: 'JetBrains Mono', monospace;
+  transition: var(--transition);
+}
+
+.mode-status-strip.strip-parallel {
+  background: rgba(0, 212, 255, 0.07);
+  border: 1px solid rgba(0, 212, 255, 0.2);
+  color: #7fcfdf;
+}
+
+.mode-status-strip.strip-serial {
+  background: rgba(124, 58, 237, 0.07);
+  border: 1px solid rgba(124, 58, 237, 0.25);
+  color: #b49af5;
+}
+
+.mode-status-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  animation: dot-pulse 2s ease-in-out infinite;
+}
+
+.strip-parallel .mode-status-dot { background: var(--blue-primary); }
+.strip-serial   .mode-status-dot { background: var(--purple); }
+
+@keyframes dot-pulse {
+  0%, 100% { opacity: 1;   transform: scale(1);    }
+  50%       { opacity: 0.5; transform: scale(0.85); }
+}
+
+
+/* ── Run button serial/parallel theming ─────────────── */
+#btn-run.mode-serial {
+  background: linear-gradient(135deg, #7c3aed, #5b21b6);
+  box-shadow: 0 0 16px rgba(124, 58, 237, 0.35);
+}
+#btn-run.mode-serial:hover:not(:disabled) {
+  box-shadow: 0 0 28px rgba(124, 58, 237, 0.55);
+}
+
+@media (max-width: 768px) {
+  .mode-selector-bar {
+    padding: 14px 16px;
+    gap: 14px;
+    border-radius: var(--radius-lg);
+  }
+  .mode-pills { gap: 8px; }
+  .mode-pill  { min-width: 110px; padding: 10px 18px; }
+  .mode-pill-name { font-size: 13px; }
+  .mode-badge { display: none; }
+}

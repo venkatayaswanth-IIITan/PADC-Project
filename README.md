@@ -23,16 +23,30 @@ An interactive Parallel Matrix Multiplication project featuring a **C++ OpenMP H
 
 ## 🛠️ How to Run
 
-### 1. C++ OpenMP Backend
-Compile with OpenMP support using `g++`:
+### 1. Serial Matrix Multiplication (`matrix_serial.cpp`)
+```bash
+g++ -fopenmp matrix_serial.cpp -o matrix_serial.exe
+./matrix_serial.exe
+```
+Enter matrix size $N$ when prompted.
+
+### 2. Parallel Matrix Multiplication with OpenMP (`matrix_parallel.cpp`)
+```bash
+g++ -fopenmp matrix_parallel.cpp -o matrix_parallel.exe
+./matrix_parallel.exe
+```
+Enter matrix size $N$ and number of threads when prompted.
+
+### 3. Combined Benchmark (`matrix.cpp`)
 ```bash
 g++ -fopenmp -O2 matrix.cpp -o matrix.exe
 ./matrix.exe
 ```
-Enter matrix size $N$ ($1 \le N \le 500$) and the number of threads when prompted.
 
-### 2. Web Dashboard
-Double-click [`index.html`](index.html) to open it in any web browser. No server or dependencies required.
+### 4. Interactive Web Dashboard
+Double-click [`index.html`](index.html) to open in your browser:
+- **Serial Mode**: Select **Serial** in the header to run single-threaded matrix multiplication with exact step-by-step logs and result matrix.
+- **Parallel Mode**: Select **Parallel** to configure OpenMP threads, observe multi-threaded thread assignment, speedup, efficiency, and real-time computation visualizer.
 
 ---
 
@@ -41,3 +55,4 @@ Double-click [`index.html`](index.html) to open it in any web browser. No server
 - **Workload per Thread**: $\text{Workload} = \frac{N^3}{p}$
 - **Speedup**: $S = \frac{T_{\text{serial}}}{T_{\text{parallel}}}$
 - **Efficiency**: $E = \frac{S}{p} \times 100\%$
+
