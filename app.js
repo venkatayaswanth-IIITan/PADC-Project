@@ -203,10 +203,20 @@ function buildInputCard(label, rows, cols, cellW, cellH, iconClass, color) {
   const previewW = dispCols <= 4 ? 64 : 48;
   const previewH = dispRows <= 4 ? 54 : 40;
 
+  // Build a shuffled pool of unique integers 1..max to use as default values
+  const cellCount = dispRows * dispCols;
+  const poolSize = Math.max(cellCount, 9);
+  const pool = Array.from({ length: poolSize }, (_, k) => k + 1);
+  for (let k = pool.length - 1; k > 0; k--) {
+    const r = Math.floor(Math.random() * (k + 1));
+    [pool[k], pool[r]] = [pool[r], pool[k]];
+  }
+  let poolIdx = 0;
+
   let cells = '';
   for (let i = 0; i < dispRows; i++) {
     for (let j = 0; j < dispCols; j++) {
-      const defaultVal = 1;
+      const defaultVal = pool[poolIdx++];
       cells += `<input
         type="number"
         class="matrix-input-cell"
@@ -297,14 +307,23 @@ window.fillMatrixPrompt = function(label, rows, cols) {
 window.randomizeMatrix = function(label, rows, cols) {
   const dispRows = Math.min(rows, 6);
   const dispCols = Math.min(cols, 6);
+  // Build a shuffled pool so no two visible cells share the same value
+  const cellCount = dispRows * dispCols;
+  const poolSize = Math.max(cellCount, 9);
+  const pool = Array.from({ length: poolSize }, (_, k) => k + 1);
+  for (let k = pool.length - 1; k > 0; k--) {
+    const r = Math.floor(Math.random() * (k + 1));
+    [pool[k], pool[r]] = [pool[r], pool[k]];
+  }
+  let poolIdx = 0;
   for (let i = 0; i < dispRows; i++) {
     for (let j = 0; j < dispCols; j++) {
       const el = document.getElementById(`inp-${label}-${i}-${j}`);
-      if (el) el.value = Math.floor(Math.random() * 9) + 1;
+      if (el) el.value = pool[poolIdx++];
     }
   }
   matrixMemory[label] = { type: 'random', rows, cols };
-  showToast('🎲', `Matrix ${label.toUpperCase()} (${rows}×${cols}) randomized with values (1-9)`);
+  showToast('🎲', `Matrix ${label.toUpperCase()} (${rows}×${cols}) randomized with unique values`);
 };
 
 window.identityMatrix = function(label, rows, cols) {
@@ -372,6 +391,20 @@ function multiplyMatrices(A, B, M, K, N) {
 }
 
 // ── Matrix Visualizer ─────────────────────────────────────────
+// Helper: build a 2D array of unique shuffled integers for a preview grid
+function makeUniquePreview(rows, cols) {
+  const count = rows * cols;
+  const pool = Array.from({ length: Math.max(count, 9) }, (_, k) => k + 1);
+  for (let k = pool.length - 1; k > 0; k--) {
+    const r = Math.floor(Math.random() * (k + 1));
+    [pool[k], pool[r]] = [pool[r], pool[k]];
+  }
+  let idx = 0;
+  return Array.from({ length: rows }, () =>
+    Array.from({ length: cols }, () => pool[idx++])
+  );
+}
+
 function buildMatrixVisualizer(matA, matB) {
   const M = state.aRows;
   const K = state.aCols;
@@ -389,8 +422,12 @@ function buildMatrixVisualizer(matA, matB) {
   const maxDisp = Math.max(dispM, dispK, dispB_rows, dispN);
   const cellSize = maxDisp <= 3 ? 42 : maxDisp <= 6 ? 32 : 24;
 
+  // Use unique random preview if no computed values supplied
+  const previewA = matA || makeUniquePreview(dispM, dispK);
+  const previewB = matB || makeUniquePreview(dispB_rows, dispN);
+
   // A Matrix block (M x K)
-  matrixWrapper.appendChild(buildVisualizerBlock('A', 'cell-a', M, K, dispM, dispK, cellSize, matA));
+  matrixWrapper.appendChild(buildVisualizerBlock('A', 'cell-a', M, K, dispM, dispK, cellSize, previewA));
 
   // Multiplier sign
   const mulSign = document.createElement('div');
@@ -399,7 +436,7 @@ function buildMatrixVisualizer(matA, matB) {
   matrixWrapper.appendChild(mulSign);
 
   // B Matrix block (B_rows x N)
-  matrixWrapper.appendChild(buildVisualizerBlock('B', 'cell-b', B_rows, N, dispB_rows, dispN, cellSize, matB));
+  matrixWrapper.appendChild(buildVisualizerBlock('B', 'cell-b', B_rows, N, dispB_rows, dispN, cellSize, previewB));
 
   // Equals sign
   const eqSign = document.createElement('div');
